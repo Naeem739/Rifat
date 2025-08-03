@@ -361,8 +361,12 @@
       const startDate = new Date();
       startDate.setDate(5);
       
-      let report = "=== 2-MONTH MEAL TRACKER REPORT ===\n\n";
-      report += `Generated on: ${new Date().toLocaleDateString()}\n\n`;
+      let report = "=== ২ মাসের খাবার ট্র্যাকার রিপোর্ট ===\n\n";
+      report += `রিপোর্ট তৈরি করা হয়েছে: ${new Date().toLocaleDateString('bn-BD')}\n\n`;
+      
+      // Create table header
+      report += "তারিখ\t\tদিন\t\tসকালের নাস্তা\tদুপুরের খাবার\tবিকেলের নাস্তা\tরাতের খাবার\n";
+      report += "═══════════════════════════════════════════════════════════════════════════════════════════════════\n";
       
       let totalCompleted = 0;
       let totalMeals = 0;
@@ -373,7 +377,22 @@
         const dateStr = formatDate(date);
         const dayName = getDayName(date);
         
-        report += `\n--- ${dateStr} (${dayName}) ---\n`;
+        // Convert day name to Bengali
+        const dayNameBengali = {
+          'Sunday': 'রবিবার',
+          'Monday': 'সোমবার',
+          'Tuesday': 'মঙ্গলবার',
+          'Wednesday': 'বুধবার',
+          'Thursday': 'বৃহস্পতিবার',
+          'Friday': 'শুক্রবার',
+          'Saturday': 'শনিবার'
+        }[dayName] || dayName;
+        
+        // Format date in Bengali style
+        const dateParts = dateStr.split('-');
+        const bengaliDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+        
+        let row = `${bengaliDate}\t\t${dayNameBengali}\t\t`;
         
         mealTimes.forEach(meal => {
           const items = getMeals(date, meal);
@@ -382,35 +401,38 @@
           
           if (mealCompleted) {
             totalCompleted++;
-            report += `✅ ${meal}: COMPLETED\n`;
+            row += "✅ সম্পন্ন\t";
           } else {
             const checkedItems = items.filter(item => saved[`${dateStr}-${meal}-${item}`]);
             if (checkedItems.length > 0) {
-              report += `⏳ ${meal}: ${checkedItems.length}/${items.length} items checked\n`;
+              row += `⏳ ${checkedItems.length}/${items.length} আইটেম\t`;
             } else {
-              report += `❌ ${meal}: Not started\n`;
+              row += "❌ শুরু হয়নি\t";
             }
           }
         });
+        
+        report += row + "\n";
       }
       
       const completionRate = ((totalCompleted / totalMeals) * 100).toFixed(1);
-      report += `\n\n=== SUMMARY ===\n`;
-      report += `Total Meals: ${totalMeals}\n`;
-      report += `Completed: ${totalCompleted}\n`;
-      report += `Completion Rate: ${completionRate}%\n`;
+      report += "\n═══════════════════════════════════════════════════════════════════════════════════════════════════\n";
+      report += "=== সারসংক্ষেপ ===\n";
+      report += `মোট খাবার: ${totalMeals}\n`;
+      report += `সম্পন্ন খাবার: ${totalCompleted}\n`;
+      report += `সম্পূর্ণতার হার: ${completionRate}%\n`;
       
       const blob = new Blob([report], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `meal-tracker-report-${new Date().toISOString().split('T')[0]}.txt`;
+      a.download = `খাবার-ট্র্যাকার-রিপোর্ট-${new Date().toISOString().split('T')[0]}.txt`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
-      showPopup("📊 Report downloaded successfully!");
+      showPopup("📊 রিপোর্ট সফলভাবে ডাউনলোড হয়েছে!");
     }
 
     // Start from 5th of current month
